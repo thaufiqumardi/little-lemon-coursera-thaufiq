@@ -133,6 +133,7 @@ fun Onboarding(navController: NavController) {
                  sharedPreferences.edit(commit = true) { putString(EMAIL, email) }
 
                  Toast.makeText(context, "Registration successful!", Toast.LENGTH_SHORT).show()
+                 navController.navigate(HomeDestination.route)
              }
         },
             modifier = Modifier
