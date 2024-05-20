@@ -3,10 +3,14 @@ package com.thaufiqumardi.littlelemon
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.scrollable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -14,10 +18,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -60,16 +69,16 @@ fun TopAppBar(navController: NavController) {
     horizontalArrangement = Arrangement.SpaceBetween,
     modifier = Modifier
       .fillMaxWidth()
-      .padding(5.dp),
+      .padding(horizontal = 16.dp),
     verticalAlignment = Alignment.CenterVertically
   ) {
     Image(
       painter = painterResource(id = R.drawable.logo),
       contentDescription = "Little Lemon Logo",
-      contentScale = ContentScale.FillWidth,
+      contentScale = ContentScale.Fit,
       modifier = Modifier
         .size(75.dp)
-        .fillMaxWidth(0.1F)
+        .fillMaxWidth(0.1F),
     )
     Image(
       painter = painterResource(id = R.drawable.profile),
@@ -108,22 +117,24 @@ fun HeroSection(menuItemsLocal: List<MenuItemRoom>) {
       Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
-          .padding(top = 16.dp)
+        modifier = Modifier.fillMaxWidth()
       ) {
         Text(
           text = stringResource(id = R.string.restaurant_desc),
-          style = MaterialTheme.typography.bodySmall,
+          style = MaterialTheme.typography.bodyMedium,
           modifier = Modifier
-            .fillMaxWidth(0.7f),
+            .fillMaxWidth(0.7f)
+            .padding(end = 16.dp),
           color = colorResource(id = R.color.secondary_3)
         )
         Image(
           painter = painterResource(id = R.drawable.hero_image),
           contentDescription = "Hero Image",
           modifier = Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .height(150.dp)
+            .fillMaxWidth()
+            .size(110.dp)
+            .clip(RoundedCornerShape(8.dp)),
+          contentScale = ContentScale.Crop
         )
       }
       Spacer(modifier = Modifier.height(16.dp))
@@ -131,7 +142,7 @@ fun HeroSection(menuItemsLocal: List<MenuItemRoom>) {
       OutlinedTextField(
         value = searchPhrase,
         onValueChange = { searchPhrase = it },
-        label = { Text("Search for your favorite food") },
+        label = { Text(stringResource(id = R.string.search_hint)) },
         leadingIcon = {
           Icon(
             imageVector = Icons.Default.Search,
@@ -152,6 +163,15 @@ fun HeroSection(menuItemsLocal: List<MenuItemRoom>) {
     }
     Spacer(modifier = Modifier.height(16.dp))
   }
+  CategoriesSection(selectedCategory = selectedCategory, onChangeCategory = { selectedCategory = it })
+  Divider(modifier = Modifier
+    .fillMaxWidth())
+  if (selectedCategory.isNotEmpty()) {
+    menuItems = menuItems.filter { it.category.contains(selectedCategory, ignoreCase = true) }
+  }
+  if (selectedCategory === "All") {
+    menuItems = menuItemsLocal
+  }
   MenuItems(menuItems = menuItems)
 
 }
@@ -168,15 +188,83 @@ fun MenuItems(menuItems: List<MenuItemRoom>){
   }
 }
 
+@Composable
+fun CategoriesSection(selectedCategory: String, onChangeCategory: (String) -> Unit) {
+  val scrollState = rememberScrollState()
+  Column(
+    modifier = Modifier.padding(16.dp)
+  ) {
+    Text(
+      text = "ORDER FOR DELIVERY!",
+      style = MaterialTheme.typography.titleMedium,
+      fontWeight = FontWeight.Bold,
+      color = colorResource(id = R.color.black)
+    )
+    Spacer(modifier = Modifier.height(8.dp))
+    Row(
+      modifier = Modifier
+        .fillMaxWidth()
+        .horizontalScroll(scrollState),
+      horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.Start)
+    ) {
+      CategoryCard(category = "All", isSelected = selectedCategory == "All", onChangeCategory = { onChangeCategory("All") })
+      CategoryCard(
+        "Starters",
+        selectedCategory == "Starters",
+        onChangeCategory = { onChangeCategory("Starters") })
+      CategoryCard(
+        "Mains",
+        selectedCategory == "Mains",
+        onChangeCategory = { onChangeCategory("Mains") })
+      CategoryCard(
+        "Deserts",
+        selectedCategory == "Deserts",
+        onChangeCategory = { onChangeCategory("Deserts") }
+        )
+      CategoryCard(
+        "Drinks",
+        selectedCategory == "Drinks",
+        onChangeCategory = { onChangeCategory("Drinks") }
+        )
+    }
+  }
+}
+
+@Composable
+fun CategoryCard(category: String, isSelected: Boolean = false, onChangeCategory: (String) -> Unit) {
+  Button(
+    onClick = {
+      onChangeCategory(category)
+    },
+    colors = ButtonDefaults.buttonColors(
+      containerColor = if (isSelected) colorResource(id = R.color.primary_1) else colorResource(id = R.color.secondary_3),
+      contentColor = if (isSelected) colorResource(id = R.color.secondary_3) else colorResource(id = R.color.primary_1)
+    ),
+  ) {
+    Text(
+      text = category,
+      style = MaterialTheme.typography.bodyMedium,
+      color = if (isSelected) colorResource(id = R.color.secondary_3) else colorResource(id = R.color.primary_1),
+      fontWeight = FontWeight.Bold
+    )
+  }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun PreviewCategoriesSection() {
+  CategoriesSection("Starters", {})
+}
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewMenuItemCard() {
   MenuItemCard(
     menuItem = MenuItemRoom(
       1,
-      "title",
+      "Title",
       10.0,
-      "desc",
+      "Lorem ipsum dolor sit amet consectetur adipiscing elit",
       "category",
       "https://github.com/Meta-Mobile-Developer-PC/Working-With-Data-API/blob/main/images/greekSalad.jpg?raw=true"
     )
@@ -189,24 +277,43 @@ fun PreviewHome() {
   Home(navController = navController, database =  MainActivity.getDatabase(LocalContext.current))
 }
 
-
 @OptIn(ExperimentalGlideComposeApi::class)
 @Composable
 fun MenuItemCard(menuItem: MenuItemRoom) {
-  Card(
-    modifier = Modifier.padding(16.dp)
+  Row(
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(16.dp)
   ) {
-    Row {
-      Column {
-        Text(text = menuItem.title)
-        Text(text = menuItem.desc)
-        Text(text = menuItem.price.toString())
-      }
-      GlideImage(
-        model = menuItem.image,
-        contentDescription = "Menu Item Image",
-        modifier = Modifier.size(100.dp)
+    Column(modifier = Modifier
+      .weight(0.7f)
+      .padding(end = 8.dp)) {
+      Text(
+        text = menuItem.title,
+        style = MaterialTheme.typography.bodyMedium,
+        fontWeight = FontWeight.Bold,
+        color = colorResource(id = R.color.black)
+      )
+      Text(
+        text = menuItem.desc,
+        style = MaterialTheme.typography.bodySmall,
+        color = colorResource(id = R.color.black)
+      )
+      Text(
+        text = "$${menuItem.price}",
+        style = MaterialTheme.typography.bodyMedium,
+        color = colorResource(id = R.color.black)
       )
     }
+    GlideImage(
+      model = menuItem.image,
+      contentDescription = "Menu Item Image",
+      modifier = Modifier
+        .fillMaxWidth(0.3f)
+        .clip(RoundedCornerShape(8.dp))
+    )
   }
+  Divider(modifier = Modifier
+    .fillMaxWidth()
+    .padding(vertical = 8.dp))
 }
