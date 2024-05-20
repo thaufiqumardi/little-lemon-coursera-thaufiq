@@ -69,6 +69,8 @@ dependencies {
   implementation("androidx.room:room-runtime:2.4.3")
   kapt("androidx.room:room-compiler:2.4.3")
 
+  implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+
   testImplementation("junit:junit:4.13.2")
 
   androidTestImplementation("androidx.test.ext:junit:1.1.5")
